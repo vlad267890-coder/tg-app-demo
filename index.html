@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini App Demo</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --accent: #3b82f6; --text: #f8fafc; --sub: #94a3b8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 16px; padding-bottom: 90px; }
+    .header { margin-bottom: 16px; }
+    .badge { display: inline-block; background: rgba(59,130,246,0.2); color: #60a5fa; padding: 4px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    p.sub { color: var(--sub); font-size: 13px; }
+    .grid { display: grid; gap: 12px; margin-top: 16px; }
+    .card { background: var(--card); border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.06); }
+    .card h3 { font-size: 15px; margin-bottom: 4px; }
+    .card span { font-size: 13px; color: var(--sub); }
+    .price { font-weight: 700; color: #60a5fa; font-size: 15px; margin-top: 4px; }
+    .btn-add { background: var(--accent); color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+    .btn-add.active { background: #10b981; }
+    .form { background: var(--card); border-radius: 14px; padding: 14px; margin-top: 16px; }
+    input { width: 100%; padding: 10px 12px; margin-top: 8px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; font-size: 14px; }
+    .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; padding: 12px 16px; border-top: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    .submit-btn { background: #10b981; color: #fff; border: none; padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge">Демо онлайн-записи и каталога</div>
+    <h1 id="greeting">Студия детейлинга & Сервис</h1>
+    <p class="sub">Выберите услуги для расчета стоимости и записи в 1 клик</p>
+  </div>
+
+  <div class="grid" id="services"></div>
+
+  <div class="form">
+    <h3 style="font-size:15px;">Данные для записи</h3>
+    <input type="text" id="phone" placeholder="Ваш телефон (+7...)">
+    <input type="text" id="date" placeholder="Желаемая дата и время (например, Завтра 15:00)">
+  </div>
+
+  <div class="footer">
+    <div>
+      <div style="font-size:12px; color:#94a3b8;">Итого к оплате:</div>
+      <div id="total" style="font-size:18px; font-weight:800;">0 ₽</div>
+    </div>
+    <button class="submit-btn" onclick="sendOrder()">Оформить заявку</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    const user = tg.initDataUnsafe?.user;
+    if (user?.first_name) {
+      document.getElementById('greeting').innerText = `${user.first_name}, добро пожаловать!`;
+    }
+
+    const items = [
+      { id: 1, title: 'Комплексная химчистка салона', time: '6 часов • Гарантия', price: 12000 },
+      { id: 2, title: 'Полировка кузова + Керамика', time: '1 день • Защита 12 мес', price: 25000 },
+      { id: 3, title: 'Оклейка зон риска пленкой', time: 'Капот, фары, бампер', price: 38000 },
+      { id: 4, title: 'Мойка люкс + Консервация', time: '90 минут', price: 3500 }
+    ];
+
+    const selected = new Set();
+    const container = document.getElementById('services');
+
+    function render() {
+      container.innerHTML = '';
+      let sum = 0;
+      items.forEach(item => {
+        const isSel = selected.has(item.id);
+        if (isSel) sum += item.price;
+        container.innerHTML += `
+          <div class="card">
+            <div>
+              <h3>${item.title}</h3>
+              <span>${item.time}</span>
+              <div class="price">${item.price.toLocaleString('ru-RU')} ₽</div>
+            </div>
+            <button class="btn-add ${isSel ? 'active' : ''}" onclick="toggle(${item.id})">
+              ${isSel ? '✓ Выбрано' : '+ Выбрать'}
+            </button>
+          </div>`;
+      });
+      document.getElementById('total').innerText = sum.toLocaleString('ru-RU') + ' ₽';
+    }
+
+    function toggle(id) {
+      selected.has(id) ? selected.delete(id) : selected.add(id);
+      render();
+    }
+
+    function sendOrder() {
+      if (selected.size === 0) return alert('Выберите хотя бы одну услугу');
+      const phone = document.getElementById('phone').value || 'Не указан';
+      const date = document.getElementById('date').value || 'Не указана';
+      const chosen = items.filter(i => selected.has(i.id)).map(i => i.title);
+      tg.sendData(JSON.stringify({ services: chosen, phone, date }));
+      alert('✅ Заявка мгновенно отправлена менеджеру в Telegram!');
+    }
+
+    render();
+  </script>
+</body>
+</html>
