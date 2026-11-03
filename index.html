@@ -93,15 +93,31 @@
       render();
     }
 
-    function sendOrder() {
+   async function sendOrder() {
       if (selected.size === 0) return alert('Выберите хотя бы одну услугу');
       const phone = document.getElementById('phone').value || 'Не указан';
       const date = document.getElementById('date').value || 'Не указана';
-      const chosen = items.filter(i => selected.has(i.id)).map(i => i.title);
-      tg.sendData(JSON.stringify({ services: chosen, phone, date }));
-      alert('✅ Заявка мгновенно отправлена менеджеру в Telegram!');
-    }
+      const chosen = items.filter(i => selected.has(i.id));
+      const sum = chosen.reduce((acc, i) => acc + i.price, 0);
+      
+      const text = `✅ <b>Новая заявка из Mini App!</b>\n\n` +
+                   `🛠 <b>Услуги:</b>\n— ${chosen.map(i => i.title).join('\n— ')}\n\n` +
+                   `💰 <b>Сумма:</b> ${sum.toLocaleString('ru-RU')} ₽\n` +
+                   `📞 <b>Телефон:</b> ${phone}\n` +
+                   `📅 <b>Время:</b> ${date}`;
 
+      const token = '9142688686:AAFVTOD69TWGJmK_Je4KQYcly93_2QyV0HI'; // Вставь токен от @BotFather
+      const chatId = user?.id;
+
+      if (chatId && token !== '9142688686:AAFVTOD69TWGJmK_Je4KQYcly93_2QyV0HI') {
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })
+        });
+      }
+      tg.close();
+    }
     render();
   </script>
 </body>
