@@ -93,7 +93,7 @@
       render();
     }
 
-   async function sendOrder() {
+   async function sendOrder()async function sendOrder() {
       if (selected.size === 0) return alert('Выберите хотя бы одну услугу');
       const phone = document.getElementById('phone').value || 'Не указан';
       const date = document.getElementById('date').value || 'Не указана';
@@ -109,7 +109,7 @@
       const token = '9142688686:AAFVTOD69TWGJmK_Je4KQYcly93_2QyV0HI'; // Вставь токен от @BotFather
       const chatId = user?.id;
 
-      if (chatId && token !== '9142688686:AAFVTOD69TWGJmK_Je4KQYcly93_2QyV0HI') {
+      if (chatId && token !== 'ТВОЙ_ТОКЕН_БОТА') {
         await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
